@@ -39,8 +39,6 @@ func createLease(leaseName, podName, namespace string) *resourcelock.LeaseLock {
 
 // elect helps in electing a new leader by using the leaderelection API.
 func elect(lock *resourcelock.LeaseLock, ctx context.Context, id string) {
-
-	// TODO: investigate lease duration and renew deadlines
 	leaderelection.RunOrDie(ctx, leaderelection.LeaderElectionConfig{
 		Lock:          lock,
 		LeaseDuration: 15 * time.Second,
@@ -55,7 +53,7 @@ func elect(lock *resourcelock.LeaseLock, ctx context.Context, id string) {
 			},
 			OnNewLeader: func(identity string) {
 				if identity == id {
-					log.Println("Still the leader.")
+					log.Println("I'm the new leader! 😋")
 					return
 				}
 				log.Println("New leader is: " + identity)
@@ -65,7 +63,7 @@ func elect(lock *resourcelock.LeaseLock, ctx context.Context, id string) {
 	})
 }
 
-// sampleTask is ran when a LeaderElector starts running
+// sampleTask is ran when a LeaderElector starts running.
 func sampleTask() {
 	for {
 		log.Println("k8sensus is running sample task.")
