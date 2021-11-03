@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"os"
 	"time"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -74,13 +75,22 @@ func sampleTask() {
 
 func main() {
 	var leaseName string
+	var leaseNamespace string
+	var podName = os.Getenv("POD_NAME")
+
 	flag.StringVar(&leaseName, "lease-name", "", "Lease Name (Lock Name)")
+	flag.StringVar(&leaseNamespace, "lease-namespace", "default", "Lease Namespace")
 
 	flag.Parse()
 
 	// validate lease name
 	if leaseName == "" {
 		log.Fatalln("Lease Name not found. Provide a valid lease name through --lease-name.")
+	}
+
+	// validate lease namespace
+	if leaseName == "" {
+		log.Fatalln("Lease Namespace not found. Provide a valid lease namespace through --lease-namespace.")
 	}
 
 	fmt.Println("🚢🏗️ k8sensus is running!")
@@ -98,8 +108,8 @@ func main() {
 	defer cancel()
 
 	// create a lease lock
-	lock := createLease(leaseName, "mypod", "my-namespace")
+	lock := createLease(leaseName, podName, leaseNamespace)
 
 	// run leader election
-	elect(lock, ctx, "mypod")
+	elect(lock, ctx, podName)
 }
