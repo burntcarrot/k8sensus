@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: k8sensus
+  name: k8sensus
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: k8sensus
+  template:
+    metadata:
+      labels:
+        app: k8sensus
+    spec:
+      automountServiceAccountToken: true
+      serviceAccount: leaderelection-sa
+      containers:
+        - image: docker.io/burntcarrot/k8sensus
+          name: k8sensus
+          args:
+            - --lease-name=k8sensus-lease
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.name
