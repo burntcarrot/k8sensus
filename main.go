@@ -13,6 +13,7 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/leaderelection"
 	"k8s.io/client-go/tools/leaderelection/resourcelock"
+	"k8s.io/klog"
 )
 
 // create a new clientset
@@ -49,14 +50,14 @@ func elect(lock *resourcelock.LeaseLock, ctx context.Context, id string) {
 				sampleTask()
 			},
 			OnStoppedLeading: func() {
-				log.Println("Evicted as leader: finding new leaders..")
+				klog.Info("Evicted as leader: finding new leaders..")
 			},
 			OnNewLeader: func(identity string) {
 				if identity == id {
-					log.Println("I'm the new leader! 😋")
+					klog.Info("I'm the new leader! 😋")
 					return
 				}
-				log.Println("New leader is: " + identity)
+				klog.Info("New leader is: " + identity)
 			},
 		},
 		ReleaseOnCancel: true,
@@ -66,7 +67,7 @@ func elect(lock *resourcelock.LeaseLock, ctx context.Context, id string) {
 // sampleTask is ran when a LeaderElector starts running.
 func sampleTask() {
 	for {
-		log.Println("k8sensus is running sample task.")
+		klog.Info("k8sensus is running sample task.")
 		time.Sleep(10 * time.Second)
 	}
 }

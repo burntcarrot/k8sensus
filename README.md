@@ -1,31 +1,31 @@
-# k8sensus
+# 🏗️ k8sensus
 
-Trying to build a leader election process for Kubernetes using the Kubernetes `client-go` client.
+Leader election process for Kubernetes using the Kubernetes `client-go` client.
+
+![Preview](/static/k8sensus-preview.gif)
+
+## Table of Contents
+  - [Why?](#why)
+  - [How?](#how)
+  - [Installation](#installation)
+  - [Usage](#usage)
+  - [Production Usage](#production-usage)
+  - [What I learnt?](#what-i-learnt)
 
 ## Why?
 
-To make systems more fault-tolerant; handling failures in replicas is crucial for higher availability.
+To make systems more fault-tolerant; handling failures in replicas is crucial for higher availability. A leader election process ensures that if the leader fails, the candidate replicas can be elected as the leader.
 
 ## How?
+
+An overview on how it works:
 
 - [x] Start by creating a lock object.
 - [x] Make leader update/renew lease. (inform other replicas about its leadership)
 - [x] Make candidate pods check the lease object.
 - [x] If leader fails, re-elect new leader.
 
-## Lease Durations and Renew Deadlines
-
-- Lease duration = 15 seconds
-- Renew deadline = 10 seconds
-- Retry period = 2 seconds
-
-```go
-LeaseDuration: 15 * time.Second,
-RenewDeadline: 10 * time.Second,
-RetryPeriod:   2 * time.Second,
-```
-
-## Usage Example
+## Installation
 
 **By cloning the repo:**
 
@@ -43,18 +43,24 @@ kubectl apply -f k8s/rbac.yaml
 kubectl apply -f k8s/deployment.yaml
 ```
 
-After applying definitions, check the pods:
+## Usage
 
-```sh
-❯ kubectl get pods
-NAME                      READY   STATUS    RESTARTS   AGE
-k8sensus-66459bcf-g2dw7   1/1     Running   0          10m
-k8sensus-66459bcf-mfljf   1/1     Running   0          10m
-k8sensus-66459bcf-v9df8   1/1     Running   0          10m
-```
+A complete example on how to use k8sensus is described [here](usage.md).
 
 ## Production Usage
 
-*If you like challenges and love debugging on Friday Nights, then, please feel free to use it on your production cluster. 😋*
+*If you like challenges and love debugging on Friday nights, then, please feel free to use it on your production cluster. 😋*
 
 > **Non-satirical note:** Do not use in production.
+
+## What I learnt?
+
+After hours of debugging and opening up 20 tabs of documentation, here's what I learnt:
+
+- Kubernetes has a [leaderelection package](https://pkg.go.dev/k8s.io/client-go/tools/leaderelection) in its client.
+- For interacting, we can use the `CoordinationV1` to get the client. ([docs](https://pkg.go.dev/k8s.io/client-go/kubernetes@v0.22.3#Clientset.CoordinationV1))
+- After reading the first line in the documentation, I was a bit disappointed:
+>  This implementation does not guarantee that only one client is acting as a leader (a.k.a. fencing).
+- This made me write this code, I wanted a single-leader workflow.
+- `leaderelection` (under `client-go`) provides a `LeaseLock` type ([docs](https://pkg.go.dev/k8s.io/client-go@v0.22.3/tools/leaderelection/resourcelock#LeaseLock)), which can be used for the leader election. (leaders renew time in the lease)
+- `leaderelection` also provides `LeaderCallbacks` ([docs](https://pkg.go.dev/k8s.io/client-go@v0.22.3/tools/leaderelection/resourcelock#LeaderCallbacks)) which can be used for handling leader events like logging when a new pod/replica gets elected as the new leader, etc.
